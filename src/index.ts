@@ -5,9 +5,12 @@ import type {
   SignMessagePayload,
   SignMessageResponse,
   WalletName,
+  TransactionPayload,
+  PluginProvider,
 } from "@aptos-labs/wallet-adapter-core";
-import {AptosWalletErrorResult, NetworkName, PluginProvider,} from "@aptos-labs/wallet-adapter-core";
-import {Types} from "aptos";
+import { NetworkName } from "@aptos-labs/wallet-adapter-core";
+import { Types } from "aptos";
+
 
 interface PontemWindow extends Window {
   pontem?: PluginProvider;
@@ -19,12 +22,12 @@ const PontemNetworkNameMapping = {
   "Aptos devnet": NetworkName.Devnet,
 };
 
-type PonetmNetworkNames = keyof typeof PontemNetworkNameMapping;
+type PontemNetworkNames = keyof typeof PontemNetworkNameMapping;
 
 interface PontemPluginProvider extends Omit<PluginProvider, 'network' | 'onNetworkChange'> {
-  network: () => Promise<{ name: PonetmNetworkNames, chainId?: string, api?: string } | NetworkName>;
+  network: () => Promise<{ name: PontemNetworkNames, chainId?: string, api?: string } | NetworkName>;
   onNetworkChange: (listener: (
-    newNetwork: { networkName?: NetworkInfo, name?: PonetmNetworkNames, chainId?: string; api?: string }
+    newNetwork: { networkName?: NetworkInfo, name?: PontemNetworkNames, chainId?: string; api?: string }
   ) => Promise<void>) => Promise<void>;
   publicKey?: () => Promise<string>;
   signAndSubmit?: (transaction: any, options?: any) => Promise<{success: boolean, result: {hash: string}}>;
@@ -73,7 +76,7 @@ export class PontemWallet implements AdapterPlugin {
   }
 
   async signAndSubmitTransaction(
-    transaction: Types.TransactionPayload,
+    transaction: TransactionPayload,
     options?: any
   ): Promise<{ hash: Types.HexEncodedBytes }> {
     try {
@@ -134,7 +137,7 @@ export class PontemWallet implements AdapterPlugin {
   async onNetworkChange(callback: any): Promise<void> {
     try {
       const handleNetworkChange = async (
-        newNetwork: { networkName?: NetworkInfo, name?: PonetmNetworkNames, chainId?: string; api?: string }
+        newNetwork: { networkName?: NetworkInfo, name?: PontemNetworkNames, chainId?: string; api?: string }
       ): Promise<void> => {
         if (newNetwork?.name) {
           callback({
