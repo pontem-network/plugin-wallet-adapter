@@ -23,17 +23,17 @@ const PontemNetworkNameMapping = {
   "Aptos devnet": NetworkName.Devnet,
 };
 
-type PonetmNetworkNames = keyof typeof PontemNetworkNameMapping;
+type PontemNetworkNames = keyof typeof PontemNetworkNameMapping;
 
 interface PontemPluginProvider
   extends Omit<PluginProvider, "network" | "onNetworkChange"> {
   network: () => Promise<
-    { name: PonetmNetworkNames; chainId?: string; api?: string } | NetworkName
+    { name: PontemNetworkNames; chainId?: string; api?: string } | NetworkName
   >;
   onNetworkChange: (
     listener: (newNetwork: {
       networkName?: NetworkInfo;
-      name?: PonetmNetworkNames;
+      name?: PontemNetworkNames;
       chainId?: string;
       api?: string;
     }) => Promise<void>,
@@ -91,39 +91,24 @@ export class PontemWallet implements AdapterPlugin {
   }
 
   async signAndSubmitTransaction(
-    transaction: Types.TransactionPayload,
-    options?: any,
+    transaction: any,
+    options?: any
   ): Promise<{ hash: Types.HexEncodedBytes }> {
     try {
       if (!this.provider?.signAndSubmit) {
         throw `${PontemWalletName} Sign and Submit failed`;
       }
-      const response = await this.provider?.signAndSubmit(transaction, options);
+      const response = await this.provider?.signAndSubmit(
+        transaction,
+        options
+      );
 
       if (!response || !response.success) {
-        throw new Error("No response");
+        throw new Error('No response');
       }
-      const hash = response.result.hash;
 
-      return { hash } as { hash: Types.HexEncodedBytes };
-    } catch (error: any) {
-      const errMsg = error.message;
-      throw errMsg;
-    }
-  }
-
-  async signAndSubmitBCSTransaction(
-    transaction: TxnBuilderTypes.TransactionPayload,
-    options?: any,
-  ): Promise<{ hash: Types.HexEncodedBytes }> {
-    try {
-      if (!this.provider?.signAndSubmit) {
-        throw `${PontemWalletName} Sign and Submit failed`;
-      }
-      const response = await this.provider?.signAndSubmit(transaction, options);
-
-      if (!response || !response.success) {
-        throw new Error("No response");
+      if ((response as unknown as AptosWalletErrorResult)?.code) {
+        throw new Error((response as unknown as AptosWalletErrorResult)?.message);
       }
       const hash = response.result.hash;
 
@@ -176,7 +161,7 @@ export class PontemWallet implements AdapterPlugin {
     try {
       const handleNetworkChange = async (newNetwork: {
         networkName?: NetworkInfo;
-        name?: PonetmNetworkNames;
+        name?: PontemNetworkNames;
         chainId?: string;
         api?: string;
       }): Promise<void> => {
