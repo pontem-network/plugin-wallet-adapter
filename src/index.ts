@@ -100,7 +100,7 @@ export class PontemWallet implements AdapterPlugin {
       }
       const response = await this.provider?.signAndSubmit(
         transaction,
-        options
+        { ...options, max_gas_amount: options?.max_gas_amount?.toString() }
       );
 
       if (!response || !response.success) {
