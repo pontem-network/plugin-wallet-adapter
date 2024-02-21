@@ -11,7 +11,7 @@ import {
   NetworkName,
   PluginProvider,
 } from "@aptos-labs/wallet-adapter-core";
-import { TxnBuilderTypes, Types } from "aptos";
+import type { Types } from "aptos";
 
 interface PontemWindow extends Window {
   pontem?: PluginProvider;
@@ -73,13 +73,22 @@ export class PontemWallet implements AdapterPlugin {
   }
 
   async account(): Promise<AccountInfo> {
-    const response = await this.provider?.account();
-    if (!response) throw `${PontemWalletName} Account Error`;
+    // window.pontem.account() returns Promise<string> instead of Promise<AccountInfo>
+    // @ts-ignore
+    const addressOrAccountInfo: string | AccountInfo = await this.provider?.account();
+    if (!addressOrAccountInfo) throw `${PontemWalletName} Account Error`;
     let publicKey = "";
     if (this.provider?.publicKey) {
       publicKey = await this.provider?.publicKey();
     }
-    return { ...response, publicKey };
+    const accountInfo: AccountInfo = typeof addressOrAccountInfo === "string" ? {
+      address: addressOrAccountInfo,
+      publicKey
+    } : {
+      ...addressOrAccountInfo,
+      publicKey
+    };
+    return accountInfo;
   }
 
   async disconnect(): Promise<void> {
